@@ -125,18 +125,23 @@ private fun ChobiVaultNav() {
                             "viewer?uri=${Uri.encode(item.uri.toString())}" +
                                 "&name=${Uri.encode(item.displayName)}" +
                                 "&mime=${Uri.encode(item.mimeType)}" +
-                                "&video=${item.isVideo}",
+                                "&video=${item.isVideo}" +
+                                "&album=${Uri.encode(name)}",
                         )
                     },
                 )
             }
             composable(
-                route = "viewer?uri={uri}&name={name}&mime={mime}&video={video}",
+                route = "viewer?uri={uri}&name={name}&mime={mime}&video={video}&album={album}",
                 arguments = listOf(
                     navArgument("uri") { type = NavType.StringType },
                     navArgument("name") { type = NavType.StringType },
                     navArgument("mime") { type = NavType.StringType },
                     navArgument("video") { type = NavType.BoolType },
+                    navArgument("album") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    },
                 ),
             ) { entry ->
                 ViewerScreen(
@@ -145,6 +150,7 @@ private fun ChobiVaultNav() {
                     mimeType = entry.arguments?.getString("mime") ?: "",
                     isVideo = entry.arguments?.getBoolean("video") ?: false,
                     onBack = { navController.popBackStack() },
+                    album = entry.arguments?.getString("album") ?: "",
                 )
             }
             composable("vault") {
