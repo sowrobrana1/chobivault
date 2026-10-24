@@ -1,17 +1,23 @@
 package com.sowrobrana.chobivault.ui.gallery
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,17 +30,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.sowrobrana.chobivault.data.Album
 import com.sowrobrana.chobivault.data.MediaItem
 import com.sowrobrana.chobivault.data.MediaStoreRepository
 
 /**
- * Albums tab: folders (Camera, Downloads, WhatsApp…) with counts.
- * Tapping an album opens its own grid (same MediaGrid as the gallery).
+ * Albums tab — modern card grid (v0.1.1 redesign): rounded-corner covers
+ * with the album name + count, built to stand next to Google Photos /
+ * Samsung Gallery instead of the plain v0.1.0 rows.
  */
 @Composable
 fun AlbumsScreen(
@@ -57,40 +66,54 @@ fun AlbumsScreen(
     }
 
     if (albums.isEmpty()) {
-        androidx.compose.foundation.layout.Box(
-            modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) { Text("কোনো অ্যালবাম পাওয়া যায়নি") }
+        Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("কোনো অ্যালবাম পাওয়া যায়নি")
+        }
         return
     }
 
-    LazyColumn(modifier.fillMaxSize()) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
         items(albums) { album ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onOpenAlbum(album.name) }
-                    .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
+            Card(
+                modifier = Modifier.clickable { onOpenAlbum(album.name) },
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             ) {
-                AsyncImage(
-                    model = album.thumbUri,
-                    contentDescription = album.name,
-                    modifier = Modifier.size(56.dp),
-                    contentScale = ContentScale.Crop,
-                )
-                Column(modifier = Modifier.padding(start = 12.dp)) {
-                    Text(album.name, style = MaterialTheme.typography.titleMedium)
+                Column {
+                    AsyncImage(
+                        model = ImageRequest.Builder(context)
+                            .data(album.thumbUri)
+                            .size(600)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = album.name,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
+                        contentScale = ContentScale.Crop,
+                    )
                     Text(
-                        "${album.count}টি ছবি/ভিডিও",
+                        text = album.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 10.dp),
+                    )
+                    Text(
+                        text = "${album.count}টি",
                         style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
                     )
                 }
-                Icon(
-                    Icons.Filled.Folder,
-                    contentDescription = null,
-                    modifier = Modifier.padding(start = 8.dp),
-                )
             }
         }
     }
@@ -127,6 +150,10 @@ fun AlbumDetailScreen(
             }
             Text(albumName, style = MaterialTheme.typography.titleLarge)
         }
-        MediaGrid(items = items, onOpen = onOpen)
+        MediaGrid(
+            items = items,
+            onOpen = onOpen,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
