@@ -86,7 +86,7 @@ fun VaultScreen(modifier: Modifier = Modifier) {
             }
             android.os.Handler(android.os.Looper.getMainLooper()).post {
                 busy = false
-                Toast.makeText(context, "$doneটি ভল্টে নেওয়া হয়েছে", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "${done}টি ভল্টে নেওয়া হয়েছে", Toast.LENGTH_SHORT).show()
             }
         }
     }
