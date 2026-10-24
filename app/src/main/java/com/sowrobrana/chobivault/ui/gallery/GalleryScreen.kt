@@ -43,6 +43,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.sowrobrana.chobivault.data.FavoritesStore
 import com.sowrobrana.chobivault.data.MediaItem
 import com.sowrobrana.chobivault.data.MediaStoreRepository
@@ -137,7 +138,13 @@ fun GalleryScreen(
                 Text("কোনো ছবি পাওয়া যায়নি")
             }
         } else {
-            MediaGrid(items = visible, onOpen = onOpen)
+            // weight(1f) guarantees the grid a bounded height so it can
+            // actually scroll (v0.1.0 bug report: grid did not scroll).
+            MediaGrid(
+                items = visible,
+                onOpen = onOpen,
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }
@@ -162,8 +169,15 @@ fun MediaGrid(
                     .aspectRatio(1f)
                     .clickable { onOpen(item) },
             ) {
+                // Small explicit thumbnail request: full-res decodes made
+                // the v0.1.0 grid janky on large libraries.
+                val context = LocalContext.current
                 AsyncImage(
-                    model = item.uri,
+                    model = ImageRequest.Builder(context)
+                        .data(item.uri)
+                        .size(400)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = item.displayName,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
