@@ -47,7 +47,7 @@ class MainActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ChobiVaultTheme {
-                ChobiVaultApp()
+                ChobiVaultNav()
             }
         }
     }
@@ -60,7 +60,7 @@ private enum class Tab(val route: String, val label: String, val icon: ImageVect
 }
 
 @Composable
-private fun ChobiVaultApp() {
+private fun ChobiVaultNav() {
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
