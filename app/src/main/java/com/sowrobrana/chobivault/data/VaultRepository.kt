@@ -122,7 +122,7 @@ class VaultRepository(context: Context) {
     suspend fun delete(id: String) = withContext(Dispatchers.IO) {
         dao.getById(id)?.let { dao.delete(it) }
         File(vaultDir, "$id.enc").delete()
-        File(cacheDir).listFiles()
+        cacheDir.listFiles()
             ?.filter { it.name.startsWith(id) }
             ?.forEach { it.delete() }
     }
