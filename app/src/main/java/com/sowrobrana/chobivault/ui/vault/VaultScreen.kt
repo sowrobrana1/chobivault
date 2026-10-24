@@ -1,10 +1,14 @@
 package com.sowrobrana.chobivault.ui.vault
 
+import android.app.Activity
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -69,6 +73,33 @@ fun VaultScreen(modifier: Modifier = Modifier) {
     var confirmDelete by remember { mutableStateOf<VaultItemEntity?>(null) }
     var busy by remember { mutableStateOf(false) }
 
+    // Vault is a MOVE, not a copy (v0.1.1 fix): after encrypting, the
+    // original is trashed with the system's own consent dialog, so the
+    // photo hides from the gallery at once.
+    val trashLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult(),
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            Toast.makeText(context, "গ্যালারি থেকে লুকানো হয়েছে", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun requestTrash(uris: List<Uri>) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val pendingIntent = MediaStore.createTrashRequest(
+                context.contentResolver, uris, true,
+            )
+            trashLauncher.launch(
+                IntentSenderRequest.Builder(pendingIntent.intentSender).build(),
+            )
+        } else {
+            try {
+                uris.forEach { context.contentResolver.delete(it, null, null) }
+            } catch (_: Exception) {
+            }
+        }
+    }
+
     val picker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickMultipleVisualMedia(maxItems = 20),
     ) { uris ->
@@ -86,7 +117,12 @@ fun VaultScreen(modifier: Modifier = Modifier) {
             }
             android.os.Handler(android.os.Looper.getMainLooper()).post {
                 busy = false
-                Toast.makeText(context, "${done}টি ভল্টে নেওয়া হয়েছে", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    context,
+                    "${done}টি ভল্টে লুকানো হয়েছে — গ্যালারি থেকে সরাতে অনুমতি দিন",
+                    Toast.LENGTH_LONG,
+                ).show()
+                requestTrash(uris)
             }
         }
     }
@@ -150,11 +186,20 @@ fun VaultScreen(modifier: Modifier = Modifier) {
             repo = repo,
             onClose = { selected = null },
             onExport = {
+                // Unhide = true move back: export to gallery, then delete
+                // the vault copy, so the photo lives in the gallery again
+                // and not as a second copy in the vault.
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
                         repo.exportToGallery(item.id)
+                        repo.delete(item.id)
                         android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            Toast.makeText(context, "গ্যালারিতে ফেরত দেওয়া হয়েছে", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                "গ্যালারিতে ফিরে এসেছে",
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                            selected = null
                         }
                     } catch (_: Exception) {
                         android.os.Handler(android.os.Looper.getMainLooper()).post {
@@ -294,7 +339,7 @@ private fun VaultViewerDialog(
             }
             Row {
                 Button(onClick = onExport, modifier = Modifier.weight(1f)) {
-                    Text("গ্যালারিতে ফেরত")
+                    Text("আনহাইড করুন")
                 }
                 Button(
                     onClick = onDelete,
