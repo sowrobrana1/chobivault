@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Vault unlock (fingerprint / face). -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+
+    <!--
+      Reading the device gallery via MediaStore (the gallery tab shows all
+      device photos automatically — no import/copy needed):
+        - READ_MEDIA_IMAGES / READ_MEDIA_VIDEO: Android 13+ (API 33+)
+        - READ_EXTERNAL_STORAGE: Android 12L and below (capped at API 32)
+      Android 13+ also offers the Photo Picker (no permission) as an
+      alternative for vault import.
+    -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <!-- Legacy only (API 26-28) for shared-media writes. -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
+    <application
+        android:name=".ChobiVaultApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.ChobiVault">
+
+        <!--
+          allowBackup="false" on purpose (same as PhotoLock): vault blobs
+          are useless without the Keystore key (which never leaves the
+          device), and encrypted user media must not be silently copied
+          into cloud backups.
+        -->
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:theme="@style/Theme.ChobiVault"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>
