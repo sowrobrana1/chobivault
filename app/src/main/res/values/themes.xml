@@ -1,5 +1,10 @@
 <resources>
-    <style name="Theme.ChobiVault" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- Base application theme. The UI itself is Jetpack Compose (Material 3);
+         this only styles the window chrome around it.
+         (PhotoLock's proven pattern: platform theme, not a Material3
+         style — Theme.Material3.DayNight.NoActionBar does not exist as
+         an AAPT-linkable resource and broke the 2026-10-24 build.) -->
+    <style name="Theme.ChobiVault" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
